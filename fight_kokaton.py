@@ -94,7 +94,7 @@ class Bomb:
     爆弾に関するクラス
     """
     _colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
-    _dires = [-1, 0, +1]
+    _dires = [-1, +1]
     def __init__(self):
         """
         爆弾円Surfaceを生成する
@@ -121,6 +121,27 @@ class Bomb:
         self._rct.move_ip(self._vx, self._vy)
         screen.blit(self._img, self._rct)
 
+class Explosion:
+    """
+    """
+    def __init__(self, bomb: Bomb, life: int):
+        img = pg.image.load(f"ex03/fig/explosion.gif")
+        self._imgs = [img, pg.transform.flip(img, True, True)]
+        self._img = self._imgs[0]
+        self._rct = self._img.get_rect(center=bomb._rct.center)
+        self._life = life
+
+    def update(self, screen: pg.Surface):
+        """
+        """
+        self._life -= 1
+        self._img = self._imgs[self._life//10%2]
+        screen.blit(self._img, self._rct)
+
+    def get_life(self):
+        return self._life
+
+
 
 class Beam:
     """
@@ -135,6 +156,8 @@ class Beam:
         self._rct.left = bird._rct.right  # こうかとんの右側にビームの左側を合わせる
         self._rct.centery = bird._rct.centery
         self._vx, self._vy = +1, 0
+        beam = None
+    exps: list[Explosion] = list()
 
     def update(self, screen: pg.Surface):
         """
@@ -145,11 +168,11 @@ class Beam:
         screen.blit(self._img, self._rct)
 
 def draw_text(screen,x,y,text,size,col):#文字表示の関数
-    font = pg.font.Font(None,size)
-    s = font.render(text,True,col)
-    x = x - s.get_width()/2
-    y = y - s.get_height()/2
-    screen.blit(s,[x,y])
+    font = pg.font.Font(None,size) #引数の文字サイズで設定
+    s = font.render(text,True,col)  #引数で指定された色でGame Overと書かれたsurfaceインスタンスを生成
+    x = x - s.get_width()/2 #文字の引数で指定された位置の横方向
+    y = y - s.get_height()/2 #引数で指定された位置の縦方向
+    screen.blit(s,[x,y]) #文字を表示
 
     
 
@@ -178,6 +201,7 @@ def main():
         
         
         for bomb in bombs:
+
             bomb.update(screen)
             if bird._rct.colliderect(bomb._rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
@@ -194,11 +218,19 @@ def main():
             beam.update(screen)
             for i, bomb in enumerate(bombs):
                 if beam._rct.colliderect(bomb._rct):
+                    exps.append(Explosion(bomb, 1200))
                     beam = None
                     del bombs[i]
                     COUNT = COUNT + 1
                     bird.change_img(6, screen)
                     break
+        for i, exp in enumerate(exps):
+            exp.update(screen)
+            if exp.get_life() <= 0:
+                del exps[i]
+
+        key_lst = pg.key.get_pressed()
+        bird.update(key_lst, screen)
 
         pg.display.update()
         clock.tick(1000)
