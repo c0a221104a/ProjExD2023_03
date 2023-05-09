@@ -144,8 +144,18 @@ class Beam:
         self._rct.move_ip(self._vx, self._vy)
         screen.blit(self._img, self._rct)
 
+def draw_text(screen,x,y,text,size,col):#文字表示の関数
+    font = pg.font.Font(None,size)
+    s = font.render(text,True,col)
+    x = x - s.get_width()/2
+    y = y - s.get_height()/2
+    screen.blit(s,[x,y])
+
+    
+
 
 def main():
+    COUNT = 0
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     clock = pg.time.Clock()
@@ -172,6 +182,7 @@ def main():
             if bird._rct.colliderect(bomb._rct):
                 # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
                 bird.change_img(8, screen)
+                draw_text(screen,800,400,"GAMEOVER",200,(255, 0, 0))
                 pg.display.update()
                 time.sleep(1)
                 return
@@ -185,6 +196,7 @@ def main():
                 if beam._rct.colliderect(bomb._rct):
                     beam = None
                     del bombs[i]
+                    COUNT = COUNT + 1
                     bird.change_img(6, screen)
                     break
 
